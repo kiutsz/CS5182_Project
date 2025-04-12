@@ -261,17 +261,17 @@ class ImportanceRenderer(torch.nn.Module):
             with torch.enable_grad():
                 out = sample_from_planes(self.plane_axes, decoder, planes, x, valid, padding_mode='zeros', box_warp=options['box_warp'], is_normal=self.is_normal)
 
-            rgb_pad = torch.zeros( (b,n*k,out['rgb'].shape[-1]),device=x.device)
-            sigma_pad = torch.ones( (b,n*k,out['sigma'].shape[-1]),device=x.device)*-100
+            rgb_pad = torch.zeros( (b,n*k,out['rgb'].shape[-1]),device='cpu')
+            sigma_pad = torch.ones( (b,n*k,out['sigma'].shape[-1]),device='cpu')*-100
             
             if self.is_normal:
-                grad_pad = torch.zeros( (b,n*k,x.shape[-1]),device=x.device)
-                grad_pred_pad = torch.zeros( (b,n*k,x.shape[-1]),device=x.device)
+                grad_pad = torch.zeros( (b,n*k,x.shape[-1]),device='cpu')
+                grad_pred_pad = torch.zeros( (b,n*k,x.shape[-1]),device='cpu')
             else:
                 grad_pad = None
                 grad_pred_pad = None
 
-            rgb_pad[valid] = out['rgb']
+            rgb_pad[valid] = out['rgb'].to('cpu')
 
             x_valid = x[valid][None].clone()
             with torch.enable_grad():
@@ -280,10 +280,10 @@ class ImportanceRenderer(torch.nn.Module):
                 if self.is_normal:
                     smpl_grad = sdf_gradient(x_valid, smpl_sdf)
 
-            sigma_pad[valid] = smpl_sdf.detach() + out['sigma']
+            sigma_pad[valid] = smpl_sdf.detach().to('cpu') + out['sigma'].to('cpu')
             if self.is_normal:
-                grad_pred_pad[valid] = out['grad']
-                grad_pad[valid] = smpl_grad.detach() + out['grad']
+                grad_pred_pad[valid] = out['grad'].to('cpu')
+                grad_pad[valid] = smpl_grad.detach().to('cpu') + out['grad'].to('cpu')
             
             if self.is_normal:
                 return rgb_pad.reshape(b,n,k,out['rgb'].shape[-1]), \

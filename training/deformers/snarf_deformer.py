@@ -137,7 +137,14 @@ class SNARFDeformer():
         rgb_cano, sigma_cano, grad_cano, grad_pred_cano = model(pts_cano_all, valid)
 
         sigma_cano, idx = torch.max(sigma_cano.squeeze(-1), dim=-1)
-
+        
+        rgb_cano =  rgb_cano.to('cpu')
+        grad_cano = grad_cano.to('cpu')
+        grad_pred_cano = grad_pred_cano.to('cpu')
+        sigma_cano = sigma_cano.to('cpu')
+        idx = idx.to('cpu')
+        pts_cano_all = pts_cano_all.to('cpu')
+        
         pts_cano = torch.gather(pts_cano_all, 2, idx[:, :, None, None].repeat(1,1,1,pts_cano_all.shape[-1]))
         rgb_cano = torch.gather(rgb_cano, 2, idx[:, :, None, None].repeat(1,1,1,rgb_cano.shape[-1]))
         if is_normal:
@@ -148,4 +155,4 @@ class SNARFDeformer():
             grad = None
             grad_pred_cano = None
             
-        return rgb_cano, sigma_cano.unsqueeze(-1), grad, grad_pred_cano
+        return rgb_cano.to('cuda:0'), sigma_cano.unsqueeze(-1).to("cuda:0"), grad.to("cuda:0"), grad_pred_cano.to("cuda:0")
