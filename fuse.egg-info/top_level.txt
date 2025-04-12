@@ -1,3 +1,0 @@
-filter_cuda
-fuse_cuda
-precompute_cuda
